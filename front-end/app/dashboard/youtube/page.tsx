@@ -1,4 +1,5 @@
 "use client"
+const API_URL = process.env.NEXT_PUBLIC_API_URL 
 import { useState, useEffect, useCallback } from "react"
 import { useAuth } from "@/hooks/use-auth"
 import { useRouter } from "next/navigation"
@@ -357,7 +358,7 @@ export default function YouTubeDashboardPage() {
     setError(null)
     try {
       const today = new Date().toISOString().split("T")[0]
-      const res = await fetch(`http://localhost:8080/youtube/yt-metrics?frequency=daily&end_date=${today}`, {
+      const res = await fetch(`${API_URL}/youtube/yt-metrics?frequency=daily&end_date=${today}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: user?.email }),
@@ -397,7 +398,7 @@ export default function YouTubeDashboardPage() {
   const handleDisconnect = async () => {
     setDisconnecting(true)
     try {
-      const res = await fetch("http://localhost:8080/api/v1/posts/disconnect", {
+      const res = await fetch(`${API_URL}/youtube/disconnect`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: user?.email }),
@@ -460,7 +461,7 @@ export default function YouTubeDashboardPage() {
               className="gap-2 bg-red-600 hover:bg-red-700"
               onClick={async () => {
                 try {
-                  const res = await fetch("http://localhost:8080/youtube/auth/initiate", {
+                  const res = await fetch(`${API_URL}/youtube/auth/initiate`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ email: user?.email }),

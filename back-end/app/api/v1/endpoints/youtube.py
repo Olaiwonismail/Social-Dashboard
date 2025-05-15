@@ -1,4 +1,10 @@
 # app/api/v1/endpoints/yt_metrics.py (updated)
+
+import os
+from dotenv import load_dotenv
+
+load_dotenv()  # loads environment variables from .env into os.environ
+
 from fastapi import APIRouter, HTTPException, Query, Depends
 from dateutil.relativedelta import relativedelta
 from typing import Optional
@@ -21,6 +27,8 @@ from google.auth.exceptions import RefreshError  # Add this import
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 router = APIRouter()
+
+FE_YOUTUBE_REDIRECT_URI = os.getenv("FE_YOUTUBE_REDIRECT_URI")
 
 class YouTubeAuthResponse(BaseModel):
     authorization_url: str
@@ -50,14 +58,14 @@ async def initiate_youtube_auth(email: UserEmail):
         )
 
 
-
+ 
 @router.get("/auth/callback")
 async def youtube_auth_callback(code: str):
     email = _email['email']
     success = validate_authorization_code(code, email)
     if not success:
         raise HTTPException(400, "Invalid authorization code")
-    return RedirectResponse(url="http://localhost:3000/dashboard/youtube")
+    return RedirectResponse(url=FE_YOUTUBE_REDIRECT_URI)
 
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta

@@ -1,4 +1,8 @@
 # app/services/instagram_dashboard.py
+import os
+from dotenv import load_dotenv
+
+load_dotenv()  # loads environment variables from .env into os.environ
 
 import os
 import requests
@@ -15,6 +19,7 @@ from app.db.session import get_db, SessionLocal
 APP_ID = os.getenv('FB_APP_ID')
 APP_SECRET = os.getenv('FB_APP_SECRET')
 REDIRECT_URI = os.getenv('FB_REDIRECT_URI')
+FE_INSTAGRAM_REDIRECT_URI = os.getenv('FE_INSTAGRAM_REDIRECT_URI')
 router = APIRouter()
 
 # --- Pydantic schemas for responses ---
@@ -133,7 +138,7 @@ def callback(request: Request):
     db = SessionLocal()
     store_access_token(db=db, email = user_email["email"], access_token=long_token)
     db.close()
-    return RedirectResponse(url="http://localhost:3000/dashboard/instagram")
+    return RedirectResponse(url=FE_INSTAGRAM_REDIRECT_URI)
     # return JSONResponse({"access_token": long_token})
 # --- Helper to get Instagram User ID ---
 def _get_ig_user_id(access_token: str) -> str:

@@ -1,4 +1,11 @@
 # app/services/yt_analytics_v2.py (updated for web flow)
+
+import os
+from dotenv import load_dotenv
+
+load_dotenv()  # loads environment variables from .env into os.environ
+
+
 from datetime import date, datetime, timedelta
 import os
 from fastapi import HTTPException, status
@@ -17,10 +24,14 @@ client_secret=os.getenv("analytics_client_secret")
 # Rest of your imports
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
+
 SCOPES = [
-    "https://www.googleapis.com/auth/youtube.readonly",
-    "https://www.googleapis.com/auth/yt-analytics.readonly"
+    'openid',
+    'https://www.googleapis.com/auth/userinfo.email',
+    'https://www.googleapis.com/auth/youtube.readonly',
+    'https://www.googleapis.com/auth/yt-analytics.readonly',
 ]
+
 
 CLIENT_SECRETS_FILE = os.path.join(os.path.dirname(__file__), 'client_secret.json')
 REDIRECT_URI = os.getenv("analytics_yt_REDIRECT_URI")
@@ -41,7 +52,7 @@ def get_authorization_url(email: str) -> str:
 
     flow = Flow.from_client_config(
         client_config=client_config,
-        scopes=["https://www.googleapis.com/auth/userinfo.email"],  # adjust scopes as needed
+        scopes=SCOPES,  # adjust scopes as needed
         redirect_uri=REDIRECT_URI
     )
     
@@ -64,8 +75,8 @@ def validate_authorization_code(code: str, email: str) -> bool:
 
         flow = Flow.from_client_config(
             client_config=client_config,
-            scopes=["https://www.googleapis.com/auth/userinfo.email"],
-            redirect_uri="http://localhost:8000/home/callback"
+            scopes=SCOPES,
+            redirect_uri="http://localhost:8080/youtube/auth/callback"
         )
         
         flow.fetch_token(code=code)

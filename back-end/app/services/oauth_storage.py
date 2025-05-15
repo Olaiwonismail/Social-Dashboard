@@ -1,7 +1,12 @@
 # app/services/oauth_storage.py
 
-# TEMPORARY MOCK FOR DEMO PURPOSES
-# In production, you'd fetch from DB using user_id
+
+
+import os
+from dotenv import load_dotenv
+
+load_dotenv()  # loads environment variables from .env into os.environ
+
 
 # You can store it globally for now if testing only one user
 import os

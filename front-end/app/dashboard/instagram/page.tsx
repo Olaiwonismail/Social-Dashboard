@@ -1,5 +1,5 @@
 "use client"
-
+const API_URL = process.env.NEXT_PUBLIC_API_URL 
 import { useState, useEffect } from "react"
 import { ProfileInfo } from "@/components/dashboard/instagram/profile-info"
 import { MediaPosts } from "@/components/dashboard/instagram/media-posts"
@@ -76,7 +76,7 @@ export default function InstagramDashboardPage() {
       setLoading(true)
       setError(null)
       try {
-        const res = await fetch("http://localhost:8080/instagram/instagram/dashboard", {
+        const res = await fetch(`${API_URL}/instagram/instagram/dashboard`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: user.email }),
@@ -108,7 +108,7 @@ export default function InstagramDashboardPage() {
 
   const handleAuthorize = async () => {
     try {
-      const res = await fetch("http://localhost:8080/instagram/login", {
+      const res = await fetch(`${API_URL}/instagram/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: user.email }),
@@ -134,7 +134,7 @@ export default function InstagramDashboardPage() {
 
   const handleDisconnect = async () => {
     try {
-      const res = await fetch("http://localhost:8080/instagram/disconnect", {
+      const res = await fetch(`${API_URL}instagram/disconnect`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: user.email }),
