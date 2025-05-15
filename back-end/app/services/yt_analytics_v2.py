@@ -76,7 +76,7 @@ def validate_authorization_code(code: str, email: str) -> bool:
         flow = Flow.from_client_config(
             client_config=client_config,
             scopes=SCOPES,
-            redirect_uri="http://localhost:8080/youtube/auth/callback"
+            redirect_uri=REDIRECT_URI   
         )
         
         flow.fetch_token(code=code)

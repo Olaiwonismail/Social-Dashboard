@@ -1,7 +1,7 @@
 import axios from "axios"
 
 // Define API base URL
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.example.com"
+const API_URL = process.env.NEXT_PUBLIC_API_URL 
 
 // Define user interface
 // auth-service.ts
