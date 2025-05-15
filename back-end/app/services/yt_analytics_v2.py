@@ -184,6 +184,10 @@ def fetch_channel_metrics(email, start_date: str, end_date: str) -> dict:
         raise
     except Exception as e:
         raise HTTPException(502, f"YouTube Analytics error: {e}")
+    
+channel_id = {
+    'id':None
+}    
 def fetch_channel_info(email) -> dict:
     """Fetch basic channel information"""
     try:
@@ -197,6 +201,7 @@ def fetch_channel_info(email) -> dict:
 
         print('fetch_channel_info')
         channel = response["items"][0]
+        channel_id['id'] = channel["id"]
         return {
             "channel_info": {
                 "id": channel["id"],
@@ -225,7 +230,7 @@ def fetch_all_videos(email: str) -> list:
             # Fetch videos from your channel's uploads
             request = yt_data.search().list(
                 part="snippet",
-                channelId="UC1Kdlat2N1EOn6jemwf4SeQ",  # Use your actual channel ID
+                channelId=channel_id['id'],  # Use your actual channel ID
                 type="video",
                 maxResults=50,
                 order="date",
@@ -248,6 +253,7 @@ def fetch_all_videos(email: str) -> list:
         raise HTTPException(500, f"Failed to fetch videos: {str(e)}")
 def fetch_top_videos(email, start_date: str, end_date: str, max_results: int = 5) -> dict:
     try:
+
         yt_analytics, yt_data = get_services(email)
         
         # Get ALL video IDs (including 0-view videos)
