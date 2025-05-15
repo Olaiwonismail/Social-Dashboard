@@ -1,6 +1,6 @@
 FROM python:3.11-alpine AS builder
 WORKDIR /app
-COPY pyproject.toml requirements.txt ./
+COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 RUN pip install .
