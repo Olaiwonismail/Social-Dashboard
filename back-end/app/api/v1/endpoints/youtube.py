@@ -75,7 +75,7 @@ def get_yt_metrics(
     start_date: Optional[str] = None,
     end_date: Optional[str] = None
 ):
-    email = email.email
+    email__ = email.email
     try:
         # Default end_date to 2 days ago (YouTube data delay)
         today = datetime.utcnow().date()
@@ -106,9 +106,9 @@ def get_yt_metrics(
         # Now validate both dates
         start_date, end_date = validate_dates(start_date, end_date)
         
-        return fetch_dashboard_data(email, start_date, end_date)
-    except HTTPException as he:
-        raise he
+        return fetch_dashboard_data(email__, start_date, end_date)
+    except HTTPException as e:
+        raise e
     except Exception as e:
         raise HTTPException(502, detail=str(e))
 
