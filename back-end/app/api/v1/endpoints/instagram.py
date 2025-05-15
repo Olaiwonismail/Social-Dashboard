@@ -12,9 +12,9 @@ from sqlalchemy.orm import Session
 from app.services.oauth_storage import get_instagram_token
 from app.models.models import User, store_instagram_data, store_access_token
 from app.db.session import get_db, SessionLocal
-APP_ID = 1901692940649239
-APP_SECRET ='4c22c2891b8edb645ec7349f9296dbaf'
-
+APP_ID = os.getenv('FB_APP_ID')
+APP_SECRET = os.getenv('FB_APP_SECRET')
+REDIRECT_URI = os.getenv('FB_REDIRECT_URI')
 router = APIRouter()
 
 # --- Pydantic schemas for responses ---
@@ -87,7 +87,7 @@ def login(email:UserEmail):
     auth_url = (
         f"https://www.facebook.com/{API_VERSION}/dialog/oauth"
         f"?client_id={APP_ID}"
-        f"&redirect_uri=http://localhost:8080/instagram/callback"
+        f"&redirect_uri={REDIRECT_URI}"
         f"&scope=instagram_basic,pages_show_list,business_management,pages_read_engagement,instagram_manage_insights"
         f"&response_type=code"
     )
@@ -107,7 +107,7 @@ def callback(request: Request):
         "https://graph.facebook.com/v19.0/oauth/access_token",
         params={
             "client_id": {APP_ID},
-            "redirect_uri":"http://localhost:8080/instagram/callback",
+            "redirect_uri": REDIRECT_URI,
             "client_secret": {APP_SECRET},
             "code": code
         }

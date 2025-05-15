@@ -4,16 +4,15 @@
 # In production, you'd fetch from DB using user_id
 
 # You can store it globally for now if testing only one user
+import os
 from app.db.session import SessionLocal
 from app.models.models import User
 from sqlalchemy.orm import Session
 
-APP_ID = '1901692940649239'
-APP_SECRET ='4c22c2891b8edb645ec7349f9296dbaf'
+APP_ID = os.getenv("FB_APP_ID")
+APP_SECRET = os.getenv("FB_APP_SECRET")
 
-# INSTAGRAM_TOKENS = {
-#     1: "EAAbBlGQzAxcBOZBd5AvYrLH8rJ8yVexzCKVN3eVr1S6JX9brNJJfMEx0qBeg8MfRdOO3ZCSRaikzPr1DWXsgorHaLKj0VLgjDea6CbT0EmO0vN4d6J18ZC7lTDqmypoZBDSZAZAfSwbvVikyFO7L6ZB5MPhcGUv5cHOT1el8GJCNgGlsZBLH86V3sX3A"
-# }
+
 db = SessionLocal()
 # oauth_storage.py
 def get_instagram_token(db: Session, email: str) -> str | None:

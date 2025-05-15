@@ -12,7 +12,8 @@ from app.models.models import User
 from typing import Optional, Tuple
 # In yt_analytics_v2.py
 from google.auth.exceptions import RefreshError  # Add this import
-
+client_id=os.getenv("analytics_client_id")
+client_secret=os.getenv("analytics_client_secret")
 # Rest of your imports
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -22,13 +23,25 @@ SCOPES = [
 ]
 
 CLIENT_SECRETS_FILE = os.path.join(os.path.dirname(__file__), 'client_secret.json')
-REDIRECT_URI = os.getenv("YOUTUBE_REDIRECT_URI", "http://localhost:8080/youtube/auth/callback")
+REDIRECT_URI = os.getenv("analytics_yt_REDIRECT_URI")
+
+client_config = {
+        "web": {
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+            "token_uri": "https://oauth2.googleapis.com/token",
+            "redirect_uris": [REDIRECT_URI],
+        }
+    }
 
 def get_authorization_url(email: str) -> str:
     """Generate OAuth URL without state"""
-    flow = Flow.from_client_secrets_file(
-        CLIENT_SECRETS_FILE,
-        scopes=SCOPES,
+   
+
+    flow = Flow.from_client_config(
+        client_config=client_config,
+        scopes=["https://www.googleapis.com/auth/userinfo.email"],  # adjust scopes as needed
         redirect_uri=REDIRECT_URI
     )
     
@@ -49,10 +62,10 @@ def validate_authorization_code(code: str, email: str) -> bool:
         if not user:
             return False
 
-        flow = Flow.from_client_secrets_file(
-            CLIENT_SECRETS_FILE,
-            scopes=SCOPES,
-            redirect_uri=REDIRECT_URI
+        flow = Flow.from_client_config(
+            client_config=client_config,
+            scopes=["https://www.googleapis.com/auth/userinfo.email"],
+            redirect_uri="http://localhost:8000/home/callback"
         )
         
         flow.fetch_token(code=code)
@@ -87,8 +100,8 @@ def get_services(email: str) -> Tuple:
             token=user.yt_token,
             refresh_token=user.yt_refresh_token,
             token_uri='https://oauth2.googleapis.com/token',
-            client_id="54335201726-4rth8cqp06lm0g663lbtpnlm20qbodnf.apps.googleusercontent.com",
-            client_secret='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'
+            client_id=client_id,
+            client_secret=client_secret,
         )
 
         if not creds.valid:
