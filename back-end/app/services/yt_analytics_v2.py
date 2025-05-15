@@ -22,7 +22,7 @@ SCOPES = [
 ]
 
 CLIENT_SECRETS_FILE = os.path.join(os.path.dirname(__file__), 'client_secret.json')
-REDIRECT_URI = os.getenv("YOUTUBE_REDIRECT_URI", "http://localhost:8080/api/v1/posts/auth/callback")
+REDIRECT_URI = os.getenv("YOUTUBE_REDIRECT_URI", "http://localhost:8080/youtube/auth/callback")
 
 def get_authorization_url(email: str) -> str:
     """Generate OAuth URL without state"""
@@ -165,12 +165,15 @@ def fetch_channel_metrics(email, start_date: str, end_date: str) -> dict:
 def fetch_channel_info(email) -> dict:
     """Fetch basic channel information"""
     try:
+        
         _, yt_data = get_services(email)
+        print(yt_data.channels())
         response = yt_data.channels().list(
             part="snippet,statistics",
             mine=True
         ).execute()
-        
+
+        print('fetch_channel_info')
         channel = response["items"][0]
         return {
             "channel_info": {
@@ -184,63 +187,96 @@ def fetch_channel_info(email) -> dict:
             }
         }
     except Exception as e:
+        property(e)
         raise HTTPException(502, f"YouTube Data error: {str(e)}")
 import isodate  # pip install isodate
 
+def fetch_all_videos(email: str) -> list:
+    """Get ALL uploaded videos using YouTube Data API"""
+    try:
+        _, yt_data = get_services(email)
+        
+        all_videos = []
+        next_page_token = None
+        
+        while True:
+            # Fetch videos from your channel's uploads
+            request = yt_data.search().list(
+                part="snippet",
+                channelId="UC1Kdlat2N1EOn6jemwf4SeQ",  # Use your actual channel ID
+                type="video",
+                maxResults=50,
+                order="date",
+                pageToken=next_page_token
+            )
+            response = request.execute()
+            
+            # Collect video IDs
+            for item in response.get("items", []):
+                if item["id"]["kind"] == "youtube#video":
+                    all_videos.append(item["id"]["videoId"])
+            
+            next_page_token = response.get("nextPageToken")
+            if not next_page_token:
+                break
+
+        return all_videos
+
+    except Exception as e:
+        raise HTTPException(500, f"Failed to fetch videos: {str(e)}")
 def fetch_top_videos(email, start_date: str, end_date: str, max_results: int = 5) -> dict:
     try:
         yt_analytics, yt_data = get_services(email)
-
-        # 1) Get top videos by views (grab a few more than max, so we can filter)
-        fetch_count = max_results * 3
-        rows = yt_analytics.reports().query(
-            ids='channel==MINE',
-            startDate=start_date,
-            endDate=end_date,
-            metrics='views,estimatedMinutesWatched',
-            dimensions='video',        # only video IDs
-            sort='-views',
-            maxResults=fetch_count
-        ).execute().get('rows', [])
-
-        if not rows:
-            return {'top_videos': []}
-
-        # 2) Fetch metadata including duration
-        video_ids = [r[0] for r in rows]
+        
+        # Get ALL video IDs (including 0-view videos)
+        all_video_ids = fetch_all_videos(email)
+        
+        # Fetch metadata for all videos
         meta_resp = yt_data.videos().list(
             part='snippet,statistics,contentDetails',
-            id=','.join(video_ids)
+            id=','.join(all_video_ids)
         ).execute().get('items', [])
-
-        # 3) Build a lookup of ID → (rowMetrics, metadata)
-        meta_map = {item['id']: item for item in meta_resp}
-
-        shorts = []
-        for vid_id, views, watch_time in rows:
-            meta = meta_map.get(vid_id)
-            if not meta:
-                continue
-
-            # parse ISO8601 duration and check <= 60s
-            duration = isodate.parse_duration(meta['contentDetails']['duration']).total_seconds()
-            if duration <= 60:
-                shorts.append({
-                    'id': vid_id,
-                    'title': meta['snippet']['title'],
-                    'thumbnail': meta['snippet']['thumbnails']['default']['url'],
-                    'views': int(views),
-                    'watch_time': int(watch_time),
-                    'likes': int(meta['statistics'].get('likeCount', 0)),
-                    'comments': int(meta['statistics'].get('commentCount', 0)),
-                })
-                if len(shorts) >= max_results:
-                    break
-
-        return {'top_videos': shorts}
-
+        
+        # Get metrics for videos with views (from Analytics API)
+        analytics_data = {}
+        if all_video_ids:
+            try:
+                analytics_rows = yt_analytics.reports().query(
+                    ids='channel==MINE',
+                    startDate=start_date,
+                    endDate=end_date,
+                    metrics='views,estimatedMinutesWatched',
+                    dimensions='video',
+                    filters=f"video=={','.join(all_video_ids)}"
+                ).execute().get('rows', [])
+                analytics_data = {row[0]: row[1:] for row in analytics_rows}
+            except Exception as e:
+                # Handle case where no analytics data exists
+                pass
+        
+        # Build combined response
+        videos = []
+        for meta in meta_resp:
+            vid_id = meta["id"]
+            analytics = analytics_data.get(vid_id, [0, 0])  # Default to 0 views
+            
+            videos.append({
+                "id": vid_id,
+                "title": meta["snippet"]["title"],
+                "thumbnail": meta["snippet"]["thumbnails"]["default"]["url"],
+                "views": int(analytics[0]) if analytics else 0,
+                "watch_time": int(analytics[1]) if analytics else 0,
+                "likes": int(meta["statistics"].get("likeCount", 0)),
+                "comments": int(meta["statistics"].get("commentCount", 0)),
+            })
+        
+        # Sort by views descending
+        sorted_videos = sorted(videos, key=lambda x: x["views"], reverse=True)
+        
+        return {'top_videos': sorted_videos[:max_results]}
+    
     except Exception as e:
-        raise HTTPException(502, f"YouTube Analytics/Data error: {e}")
+        raise HTTPException(502, f"YouTube Data error: {e}")
     
 def fetch_demographics(email,start_date: str, end_date: str) -> dict:
     try:
@@ -285,10 +321,13 @@ def fetch_geography(email,start_date: str, end_date: str) -> dict:
         raise HTTPException(502, f"YouTube Analytics error: {e}")
 
 def fetch_dashboard_data(email:str,start_date: str, end_date: str) -> dict:
+    print('lmaooo')
     try:
         data = {}
         data.update(fetch_channel_info(email))  # Add channel info first
+
         data["channel_metrics"] = fetch_channel_metrics(email,start_date, end_date)
+        
         data.update(fetch_top_videos(email,start_date, end_date))
         data.update(fetch_demographics(email,start_date, end_date))
         data.update(fetch_traffic_sources(email,start_date, end_date))

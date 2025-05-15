@@ -18,7 +18,7 @@ app.add_middleware(
     allow_headers=["*", "Authorization"],  # Explicitly allow Authorization
 )
 # Include routes
-app.include_router(youtube.router, prefix="/api/v1/posts", tags=["Posts"])
+app.include_router(youtube.router, prefix="/youtube", tags=["Youtube"])
 
 
 

@@ -2,7 +2,8 @@
 from fastapi import APIRouter, HTTPException, Query, Depends
 from dateutil.relativedelta import relativedelta
 from typing import Optional
-from pydantic import BaseModel
+from fastapi.responses import RedirectResponse
+from pydantic import BaseModel 
 from app.services.yt_analytics_v2 import (
     fetch_dashboard_data,
     get_services,
@@ -27,37 +28,37 @@ class YouTubeAuthResponse(BaseModel):
 class YouTubeCallback(BaseModel):
     state: str
     code: str
-
+ 
 class UserEmail(BaseModel):
     email : str
 
+_email = {
+    'email': None
+}
 @router.post("/auth/initiate")
 async def initiate_youtube_auth(email: UserEmail):
     email = email.email
+    _email['email'] = email
     try:
         auth_url = get_authorization_url(email)
-        return {"authorization_url": auth_url}
+        print(f"Authorization URL: {auth_url}")
+        return {auth_url}
     except Exception as e:
         raise HTTPException(
             status_code=400,
             detail=f"Authorization initiation failed: {str(e)}"
         )
 
-@router.post("/auth/initiate")
-async def initiate_youtube_auth(email: UserEmail):
-    try:
-        auth_url = get_authorization_url(email.email)
-        return {"authorization_url": auth_url}
-    except Exception as e:
-        raise HTTPException(400, detail=str(e))
 
-@router.post("/auth/callback")
-async def youtube_auth_callback(email: UserEmail,code: str):
-    email = email.email
+
+@router.get("/auth/callback")
+async def youtube_auth_callback(code: str):
+    email = _email['email']
     success = validate_authorization_code(code, email)
     if not success:
         raise HTTPException(400, "Invalid authorization code")
-    return {"status": "YouTube account connected successfully"}
+    return RedirectResponse(url="http://localhost:3000/dashboard/youtube")
+
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 

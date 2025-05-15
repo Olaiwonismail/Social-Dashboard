@@ -32,7 +32,7 @@ async def signup(user: UserSignup, db: Session = Depends(get_db)):
     existing_user = db.query(User).filter_by(email=email).first()
     if existing_user:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_409_CONFLICT,
             detail="Email already registered"
         )
     
@@ -76,7 +76,7 @@ async def login(user: UserLogin, db: Session = Depends(get_db)):
     if not db_user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials"
+            detail="User not found"
         )
     
     # Convert hex salt back to bytes
@@ -94,8 +94,8 @@ async def login(user: UserLogin, db: Session = Depends(get_db)):
     # Compare hashes
     if not hashed_pw == db_user.password:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Incorrect password"
         )
     
     # Create JWT token

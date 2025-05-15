@@ -54,7 +54,10 @@ export const authService = {
     } catch (error) {
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 401) {
-          throw new Error("Invalid email or password. Please try again."); // ❌ Generic error
+          throw new Error("User not found."); // ❌ Generic error
+        }
+        else if (error.response?.status === 403){
+          throw new Error("Wrong Password");
         }
         throw new Error(error.response?.data?.detail || "Login failed");
       }
