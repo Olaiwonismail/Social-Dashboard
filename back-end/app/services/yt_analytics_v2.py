@@ -1,9 +1,7 @@
 # app/services/yt_analytics_v2.py (updated for web flow)
 
 import os
-from dotenv import load_dotenv
-
-load_dotenv()  # loads environment variables from .env into os.environ
+ # loads environment variables from .env into os.environ
 
 
 from datetime import date, datetime, timedelta

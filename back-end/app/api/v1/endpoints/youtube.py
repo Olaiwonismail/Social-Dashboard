@@ -1,9 +1,7 @@
 # app/api/v1/endpoints/yt_metrics.py (updated)
 
 import os
-from dotenv import load_dotenv
-
-load_dotenv()  # loads environment variables from .env into os.environ
+  # loads environment variables from .env into os.environ
 
 from fastapi import APIRouter, HTTPException, Query, Depends
 from dateutil.relativedelta import relativedelta
